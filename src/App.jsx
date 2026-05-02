@@ -10,6 +10,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import HomePage from './pages/HomePage';
 import ListingsPage from './pages/ListingsPage';
+import ListingDetailPage from './pages/ListingDetailPage';
 import EventsPage from './pages/EventsPage';
 import MessagesPage from './pages/MessagesPage';
 import ProfilePage from './pages/ProfilePage';
@@ -63,6 +64,7 @@ export default function App() {
         >
           <Route index element={<HomePage />} />
           <Route path="listings" element={<ListingsPage />} />
+          <Route path="listings/:id" element={<ListingDetailPage />} />
           <Route path="events" element={<EventsPage />} />
           <Route path="messages" element={<MessagesPage />} />
           <Route path="profile" element={<ProfilePage />} />

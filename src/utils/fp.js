@@ -1,5 +1,37 @@
 import * as R from 'ramda';
 
+export const formatPrice = (price) => {
+  if (price == null || price === '' || Number(price) === 0) return 'Ücretsiz';
+  return new Intl.NumberFormat('tr-TR', {
+    style: 'currency',
+    currency: 'TRY',
+    maximumFractionDigits: 0,
+  }).format(Number(price));
+};
+
+export const formatDate = (dateStr) => {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('tr-TR', {
+    day: 'numeric',
+    month: 'long',
+  });
+};
+
+export const formatDateLong = (dateStr) => {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('tr-TR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+};
+
+export const imgUrl = (path) => {
+  if (!path) return null;
+  const base = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace('/api', '');
+  return `${base}/${path}`;
+};
+
 export const filterByType = (type) =>
   R.isNil(type) || type === 'all'
     ? R.identity
