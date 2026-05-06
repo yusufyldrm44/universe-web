@@ -7,6 +7,7 @@ import {
   Home,
   LogOut,
   MessageSquare,
+  ShieldCheck,
   Sparkles,
   Store,
   User,
@@ -47,6 +48,7 @@ export default function Layout() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const isAdmin = useAuthStore((s) => s.isAdmin?.() ?? s.user?.role === 'admin');
   const [menuOpen, setMenuOpen] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const menuRef = useRef(null);
@@ -100,6 +102,12 @@ export default function Layout() {
                 {item.label}
               </NavLink>
             ))}
+            {isAdmin && (
+              <NavLink to="/admin" className={desktopLinkClasses}>
+                <ShieldCheck className="w-4 h-4" />
+                Admin
+              </NavLink>
+            )}
           </nav>
 
           <div className="flex items-center gap-2">

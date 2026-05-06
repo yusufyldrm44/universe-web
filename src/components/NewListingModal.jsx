@@ -7,6 +7,7 @@ const TYPES = [
   { value: 'house', label: 'Ev' },
   { value: 'roommate', label: 'Ev Arkadaşı' },
   { value: 'job', label: 'İş' },
+  { value: 'internship', label: 'Staj' },
 ];
 
 const PRICE_TYPES = new Set(['item', 'house']);
@@ -51,6 +52,7 @@ export default function NewListingModal({ onClose, onSuccess }) {
   const [dragOver, setDragOver] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [submitted, setSubmitted] = useState(false);
 
   const fileInputRef = useRef(null);
   const titleRef = useRef(null);
@@ -108,13 +110,36 @@ export default function NewListingModal({ onClose, onSuccess }) {
     setLoading(true);
     try {
       await createListing(fd);
-      onSuccess();
+      setSubmitted(true);
     } catch (err) {
       setError(err?.response?.data?.message || err?.message || 'İlan oluşturulamadı.');
     } finally {
       setLoading(false);
     }
   };
+
+  if (submitted) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-stone-200 p-8 text-center animate-fade-in-up">
+          <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mx-auto">
+            <span className="text-amber-600 text-xl font-bold">!</span>
+          </div>
+          <h3 className="mt-4 font-serif text-xl text-stone-900">İlanınız gönderildi.</h3>
+          <p className="mt-2 text-sm text-stone-500 leading-relaxed">
+            İlanınız admin onayına gönderildi. Onaylandıktan sonra yayına girecek.
+          </p>
+          <button
+            type="button"
+            onClick={onSuccess}
+            className="mt-6 w-full py-2.5 bg-stone-900 text-white text-sm font-medium rounded-xl hover:bg-stone-800 transition-colors"
+          >
+            Tamam
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -339,6 +364,60 @@ export default function NewListingModal({ onClose, onSuccess }) {
                   className="w-full px-4 py-2.5 border border-stone-300 rounded-xl text-stone-900 text-sm placeholder-stone-400 focus:outline-none focus:border-stone-600 focus:ring-2 focus:ring-stone-200 transition"
                 />
               </div>
+            </>
+          )}
+
+          {/* Staj: ek alanlar */}
+          {type === 'internship' && (
+            <>
+              <div>
+                <label htmlFor="ml-company" className="block text-xs font-medium tracking-[0.12em] uppercase text-stone-500 mb-2">
+                  Şirket / Kurum <span className="normal-case tracking-normal text-stone-400">(zorunlu)</span>
+                </label>
+                <input
+                  id="ml-company"
+                  type="text"
+                  required
+                  value={extraData.company_name ?? ''}
+                  onChange={(e) => setExtra('company_name', e.target.value)}
+                  placeholder="Şirket adı"
+                  className="w-full px-4 py-2.5 border border-stone-300 rounded-xl text-stone-900 text-sm placeholder-stone-400 focus:outline-none focus:border-stone-600 focus:ring-2 focus:ring-stone-200 transition"
+                />
+              </div>
+              <div>
+                <label htmlFor="ml-duration" className="block text-xs font-medium tracking-[0.12em] uppercase text-stone-500 mb-2">
+                  Süre <span className="normal-case tracking-normal text-stone-400">(ay)</span>
+                </label>
+                <input
+                  id="ml-duration"
+                  type="number"
+                  min="1"
+                  max="24"
+                  value={extraData.duration_months ?? ''}
+                  onChange={(e) => setExtra('duration_months', e.target.value)}
+                  placeholder="3"
+                  className="w-full px-4 py-2.5 border border-stone-300 rounded-xl text-stone-900 text-sm placeholder-stone-400 focus:outline-none focus:border-stone-600 focus:ring-2 focus:ring-stone-200 transition"
+                />
+              </div>
+              <ToggleGroup
+                label="Ücretli mi?"
+                options={[
+                  { value: 'true', label: 'Evet' },
+                  { value: 'false', label: 'Hayır' },
+                ]}
+                value={extraData.is_paid != null ? String(extraData.is_paid) : ''}
+                onChange={(v) => setExtra('is_paid', v === 'true')}
+              />
+              <ToggleGroup
+                label="Çalışma şekli"
+                options={[
+                  { value: 'onsite', label: 'Yerinde' },
+                  { value: 'remote', label: 'Uzaktan' },
+                  { value: 'hybrid', label: 'Hibrit' },
+                ]}
+                value={extraData.work_type ?? ''}
+                onChange={(v) => setExtra('work_type', v)}
+              />
             </>
           )}
 

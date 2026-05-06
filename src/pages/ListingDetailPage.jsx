@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, MapPin, Share2 } from 'lucide-react';
+import { ArrowLeft, Loader2, MapPin, Share2 } from 'lucide-react';
 import { useAuthStore } from '../services/authStore';
 import { getListingById } from '../services/listingService';
+import { getOrCreateRoom } from '../services/messageService';
 import { formatDateLong, formatPrice, imgUrl } from '../utils/fp';
 
 const TYPE_LABEL = {
@@ -10,6 +11,7 @@ const TYPE_LABEL = {
   house: 'Ev',
   roommate: 'Ev Arkadaşı',
   job: 'İş',
+  internship: 'Staj',
 };
 
 const TYPE_COLOR = {
@@ -17,6 +19,7 @@ const TYPE_COLOR = {
   house: 'text-amber-700 bg-amber-50',
   roommate: 'text-sky-700 bg-sky-50',
   job: 'text-emerald-700 bg-emerald-50',
+  internship: 'text-purple-700 bg-purple-100',
 };
 
 const CONDITION_LABEL = { new: 'Sıfır', used: 'Az Kullanılmış', worn: 'Yıpranmış' };
@@ -53,6 +56,7 @@ export default function ListingDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activePhoto, setActivePhoto] = useState(0);
+  const [msgLoading, setMsgLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,6 +103,19 @@ export default function ListingDetailPage() {
         : listing.extra_data)
     : {};
   const colorClass = TYPE_COLOR[listing.type] ?? 'text-stone-600 bg-stone-100';
+
+  const handleMessage = async () => {
+    if (!listing?.user_id) return;
+    setMsgLoading(true);
+    try {
+      const room = await getOrCreateRoom(listing.user_id);
+      navigate(`/messages?room=${room.id}`);
+    } catch {
+      navigate('/messages');
+    } finally {
+      setMsgLoading(false);
+    }
+  };
 
   const handleShare = () => {
     if (navigator.share) {
@@ -242,10 +259,11 @@ export default function ListingDetailPage() {
               <div className="space-y-2 pt-1">
                 <button
                   type="button"
-                  onClick={() => navigate('/messages')}
-                  disabled={user?.id === listing.user_id}
-                  className="w-full py-2.5 bg-stone-900 text-white text-sm font-medium rounded-xl hover:bg-stone-800 active:bg-stone-950 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  onClick={handleMessage}
+                  disabled={user?.id === listing.user_id || msgLoading}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-stone-900 text-white text-sm font-medium rounded-xl hover:bg-stone-800 active:bg-stone-950 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
+                  {msgLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                   Mesaj Gönder
                 </button>
                 <button

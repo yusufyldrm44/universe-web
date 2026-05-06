@@ -56,6 +56,37 @@ export const sortByPrice = (direction = 'asc') => {
   return R.sort(cmp);
 };
 
+const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+export const filterUpcomingEvents = (events) => {
+  const now = startOfDay(new Date());
+  return events.filter((e) => e.event_date && new Date(e.event_date) >= now);
+};
+
+export const filterThisWeekEvents = (events) => {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun
+  const monday = startOfDay(new Date(now));
+  monday.setDate(now.getDate() - ((day + 6) % 7));
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 7);
+  return events.filter((e) => {
+    const d = new Date(e.event_date);
+    return d >= monday && d < sunday;
+  });
+};
+
+export const filterThisMonthEvents = (events) => {
+  const now = new Date();
+  return events.filter((e) => {
+    const d = new Date(e.event_date);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  });
+};
+
+export const sortByDate = (events) =>
+  [...events].sort((a, b) => new Date(a.event_date) - new Date(b.event_date));
+
 export const applyListingFilters = ({
   type,
   search,

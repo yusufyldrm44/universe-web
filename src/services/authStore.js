@@ -21,7 +21,7 @@ const persist = (token, user) => {
   else localStorage.removeItem(USER_KEY);
 };
 
-export const useAuthStore = create((set) => ({
+export const useAuthStore = create((set, get) => ({
   token: localStorage.getItem(TOKEN_KEY) || null,
   user: readUser(),
   loading: false,
@@ -87,4 +87,6 @@ export const useAuthStore = create((set) => ({
   },
 
   clearError: () => set({ error: null }),
+
+  isAdmin: () => get().user?.role === 'admin',
 }));

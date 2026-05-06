@@ -14,6 +14,7 @@ import ListingDetailPage from './pages/ListingDetailPage';
 import EventsPage from './pages/EventsPage';
 import MessagesPage from './pages/MessagesPage';
 import ProfilePage from './pages/ProfilePage';
+import AdminPage from './pages/AdminPage';
 import { useAuthStore } from './services/authStore';
 
 function PrivateRoute({ children }) {
@@ -23,6 +24,15 @@ function PrivateRoute({ children }) {
   if (!token) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
+  return children;
+}
+
+function AdminRoute({ children }) {
+  const token = useAuthStore((s) => s.token);
+  const user = useAuthStore((s) => s.user);
+  const location = useLocation();
+  if (!token) return <Navigate to="/login" replace state={{ from: location }} />;
+  if (user?.role !== 'admin') return <Navigate to="/" replace />;
   return children;
 }
 
@@ -68,6 +78,14 @@ export default function App() {
           <Route path="events" element={<EventsPage />} />
           <Route path="messages" element={<MessagesPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route
+            path="admin"
+            element={
+              <AdminRoute>
+                <AdminPage />
+              </AdminRoute>
+            }
+          />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

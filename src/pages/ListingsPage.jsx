@@ -20,6 +20,7 @@ const TYPES = [
   { value: 'house', label: 'Ev' },
   { value: 'roommate', label: 'Ev Arkadaşı' },
   { value: 'job', label: 'İş' },
+  { value: 'internship', label: 'Staj' },
 ];
 
 const TYPE_COLOR = {
@@ -27,6 +28,7 @@ const TYPE_COLOR = {
   house: 'text-amber-700 bg-amber-50',
   roommate: 'text-sky-700 bg-sky-50',
   job: 'text-emerald-700 bg-emerald-50',
+  internship: 'text-purple-700 bg-purple-100',
 };
 
 const TYPE_LABEL = {
@@ -34,6 +36,7 @@ const TYPE_LABEL = {
   house: 'Ev',
   roommate: 'Ev Arkadaşı',
   job: 'İş',
+  internship: 'Staj',
 };
 
 function SkeletonCard() {
@@ -263,7 +266,7 @@ export default function ListingsPage() {
                 listing={listing}
                 isOwner={user?.id === listing.user_id}
                 deleting={deletingId === listing.id}
-                onDelete={(e) => { e.preventDefault(); handleDelete(listing.id); }}
+                onDelete={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(listing.id); }}
               />
             ))}
           </div>
