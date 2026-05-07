@@ -13,6 +13,7 @@ import {
   User,
 } from 'lucide-react';
 import { useAuthStore } from '../services/authStore';
+import { getAvatarUrl } from '../services/userService';
 
 const navItems = [
   { to: '/', label: 'Ana Sayfa', icon: Home, end: true },
@@ -126,9 +127,17 @@ export default function Layout() {
                 onClick={() => setMenuOpen((v) => !v)}
                 className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-xl hover:bg-slate-100 transition-colors"
               >
-                <span className="w-9 h-9 rounded-full bg-gradient-primary text-white text-sm font-semibold flex items-center justify-center">
-                  {initialsOf(user?.full_name)}
-                </span>
+                {getAvatarUrl(user?.avatar_url) ? (
+                  <img
+                    src={getAvatarUrl(user.avatar_url)}
+                    alt={user.full_name}
+                    className="w-9 h-9 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="w-9 h-9 rounded-full bg-gradient-primary text-white text-sm font-semibold flex items-center justify-center">
+                    {initialsOf(user?.full_name)}
+                  </span>
+                )}
                 <span className="hidden sm:block text-sm font-medium text-slate-700 max-w-[8rem] truncate">
                   {user?.full_name || 'Kullanıcı'}
                 </span>
