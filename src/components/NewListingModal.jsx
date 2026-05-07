@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { AlertCircle, Loader2, Upload, X } from 'lucide-react';
+import { AlertCircle, Loader2, Sparkles, Upload, X } from 'lucide-react';
 import { createListing } from '../services/listingService';
+import { improveDescription, suggestCategory, suggestPrice } from '../services/aiService';
 
 const TYPES = [
   { value: 'item', label: 'Eşya' },
@@ -12,7 +13,7 @@ const TYPES = [
 
 const PRICE_TYPES = new Set(['item', 'house']);
 const MAX_PHOTOS = 8;
-const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+const MAX_SIZE = 5 * 1024 * 1024;
 
 function ToggleGroup({ label, options, value, onChange }) {
   return (
@@ -40,6 +41,35 @@ function ToggleGroup({ label, options, value, onChange }) {
   );
 }
 
+function AiButton({ onClick, loading, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={loading}
+      className="inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+    >
+      {loading ? (
+        <span className="text-stone-400">...</span>
+      ) : (
+        <>
+          <Sparkles className="w-3 h-3" />
+          {children}
+        </>
+      )}
+    </button>
+  );
+}
+
+function AiNote({ text }) {
+  if (!text) return null;
+  return (
+    <span className="inline-flex items-center text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded border border-blue-200">
+      {text}
+    </span>
+  );
+}
+
 export default function NewListingModal({ onClose, onSuccess }) {
   const [type, setType] = useState('item');
   const [title, setTitle] = useState('');
@@ -54,6 +84,13 @@ export default function NewListingModal({ onClose, onSuccess }) {
   const [error, setError] = useState(null);
   const [submitted, setSubmitted] = useState(false);
 
+  // AI state
+  const [categoryLoading, setCategoryLoading] = useState(false);
+  const [improveLoading, setImproveLoading] = useState(false);
+  const [priceLoading, setPriceLoading] = useState(false);
+  const [aiCategoryNote, setAiCategoryNote] = useState('');
+  const [aiPriceNote, setAiPriceNote] = useState('');
+
   const fileInputRef = useRef(null);
   const titleRef = useRef(null);
 
@@ -64,11 +101,12 @@ export default function NewListingModal({ onClose, onSuccess }) {
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  // Reset type-specific fields on type change
   const handleTypeChange = (t) => {
     setType(t);
     setCondition('');
     setExtraData({});
+    setAiCategoryNote('');
+    setAiPriceNote('');
     if (!PRICE_TYPES.has(t)) setPrice('');
   };
 
@@ -91,6 +129,47 @@ export default function NewListingModal({ onClose, onSuccess }) {
     e.preventDefault();
     setDragOver(false);
     addFiles(e.dataTransfer.files);
+  };
+
+  // AI handlers
+  const handleSuggestCategory = async () => {
+    if (!title) return;
+    setCategoryLoading(true);
+    try {
+      const result = await suggestCategory(title, description);
+      if (result.category) setType(result.category);
+      setAiCategoryNote(`AI önerisi: ${result.label ?? result.category}`);
+    } catch {
+      // sessizce geç
+    } finally {
+      setCategoryLoading(false);
+    }
+  };
+
+  const handleImprove = async () => {
+    if (!title || !description) return;
+    setImproveLoading(true);
+    try {
+      const improved = await improveDescription(title, description, type);
+      if (improved) setDescription(improved);
+    } catch {
+      // sessizce geç
+    } finally {
+      setImproveLoading(false);
+    }
+  };
+
+  const handleSuggestPrice = async () => {
+    if (!title) return;
+    setPriceLoading(true);
+    try {
+      const suggestion = await suggestPrice(title, description, type, condition);
+      if (suggestion) setAiPriceNote(`Önerilen: ${suggestion}`);
+    } catch {
+      // sessizce geç
+    } finally {
+      setPriceLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -147,7 +226,7 @@ export default function NewListingModal({ onClose, onSuccess }) {
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-stone-200 flex flex-col max-h-[90vh] animate-fade-in-up">
-        {/* Başlık — sabit */}
+        {/* Başlık */}
         <div className="flex items-center justify-between px-7 pt-6 pb-5 border-b border-stone-200 flex-shrink-0">
           <div>
             <p className="text-[10px] tracking-[0.22em] uppercase text-stone-500">YENİ İLAN</p>
@@ -162,7 +241,7 @@ export default function NewListingModal({ onClose, onSuccess }) {
           </button>
         </div>
 
-        {/* Form — kaydırılabilir */}
+        {/* Form */}
         <form onSubmit={handleSubmit} className="overflow-y-auto px-7 py-6 space-y-5 flex-1">
 
           {/* Tür */}
@@ -188,6 +267,12 @@ export default function NewListingModal({ onClose, onSuccess }) {
               placeholder="İlanın kısaca ne hakkında?"
               className="w-full px-4 py-2.5 border border-stone-300 rounded-xl text-stone-900 text-sm placeholder-stone-400 focus:outline-none focus:border-stone-600 focus:ring-2 focus:ring-stone-200 transition"
             />
+            <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+              <AiButton onClick={handleSuggestCategory} loading={categoryLoading}>
+                Kategori Öner
+              </AiButton>
+              {aiCategoryNote && <AiNote text={aiCategoryNote} />}
+            </div>
           </div>
 
           {/* Açıklama */}
@@ -204,6 +289,11 @@ export default function NewListingModal({ onClose, onSuccess }) {
               placeholder="Detayları buraya yaz..."
               className="w-full px-4 py-2.5 border border-stone-300 rounded-xl text-stone-900 text-sm placeholder-stone-400 focus:outline-none focus:border-stone-600 focus:ring-2 focus:ring-stone-200 transition resize-none"
             />
+            <div className="mt-1.5">
+              <AiButton onClick={handleImprove} loading={improveLoading}>
+                AI ile İyileştir
+              </AiButton>
+            </div>
           </div>
 
           {/* Fotoğraf yükleme */}
@@ -244,11 +334,7 @@ export default function NewListingModal({ onClose, onSuccess }) {
               <div className="mt-3 flex flex-wrap gap-2">
                 {photos.map((photo, idx) => (
                   <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border border-stone-200 flex-shrink-0">
-                    <img
-                      src={URL.createObjectURL(photo)}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={URL.createObjectURL(photo)} alt="" className="w-full h-full object-cover" />
                     <button
                       type="button"
                       onClick={() => removePhoto(idx)}
@@ -262,7 +348,7 @@ export default function NewListingModal({ onClose, onSuccess }) {
             )}
           </div>
 
-          {/* İki sütunlu ortak alanlar: Şehir + Fiyat */}
+          {/* Şehir + Fiyat */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="ml-city" className="block text-xs font-medium tracking-[0.12em] uppercase text-stone-500 mb-2">
@@ -292,6 +378,12 @@ export default function NewListingModal({ onClose, onSuccess }) {
                   placeholder="0"
                   className="w-full px-4 py-2.5 border border-stone-300 rounded-xl text-stone-900 text-sm placeholder-stone-400 focus:outline-none focus:border-stone-600 focus:ring-2 focus:ring-stone-200 transition"
                 />
+                <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+                  <AiButton onClick={handleSuggestPrice} loading={priceLoading}>
+                    Fiyat Önerisi Al
+                  </AiButton>
+                  {aiPriceNote && <AiNote text={aiPriceNote} />}
+                </div>
               </div>
             )}
           </div>
