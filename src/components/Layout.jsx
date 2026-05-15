@@ -6,6 +6,7 @@ import {
   ChevronDown,
   Home,
   LogOut,
+  MessageCircle,
   MessageSquare,
   ShieldCheck,
   Sparkles,
@@ -19,6 +20,7 @@ const navItems = [
   { to: '/', label: 'Ana Sayfa', icon: Home, end: true },
   { to: '/listings', label: 'İlanlar', icon: Store },
   { to: '/events', label: 'Etkinlikler', icon: Calendar },
+  { to: '/forum', label: 'Forum', icon: MessageCircle },
   { to: '/messages', label: 'Mesajlar', icon: MessageSquare },
   { to: '/profile', label: 'Profil', icon: User },
 ];

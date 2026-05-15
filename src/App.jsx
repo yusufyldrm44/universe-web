@@ -15,6 +15,8 @@ import EventsPage from './pages/EventsPage';
 import MessagesPage from './pages/MessagesPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
+import ForumPage from './pages/ForumPage';
+import ForumTopicPage from './pages/ForumTopicPage';
 import { useAuthStore } from './services/authStore';
 
 function PrivateRoute({ children }) {
@@ -76,6 +78,8 @@ export default function App() {
           <Route path="listings" element={<ListingsPage />} />
           <Route path="listings/:id" element={<ListingDetailPage />} />
           <Route path="events" element={<EventsPage />} />
+          <Route path="forum" element={<ForumPage />} />
+          <Route path="forum/:id" element={<ForumTopicPage />} />
           <Route path="messages" element={<MessagesPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route
